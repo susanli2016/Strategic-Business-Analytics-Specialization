@@ -1,0 +1,104 @@
+---
+title: "Practice Quizz Module 1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+pasta <- read.csv('PASTAPURCHASE.csv')
+```
+
+
+## 1. What is the correct mean and standard deviation of the quantity of pasta purchased by time unit by household?
+
+```{r}
+mean(pasta$PASTA)
+sd(pasta$PASTA)
+```
+
+The mean is 1.841545 and the standard deviation is 1.025911.
+
+## 2. In which area are located (i) the poorest household and (ii) the wealthiest household?
+
+```{r}
+by_income <- pasta %>% 
+  group_by(INCOME) %>% 
+  summarise(area = mean(AREA))
+```
+
+```{r}
+by_income[which.min(by_income$INCOME), ]
+by_income[which.max(by_income$INCOME), ]
+```
+
+The poorest household is located in area 2 and the wealthiest household is located in area 5
+
+## 3. What is the maximum pasta quantity a household has bought over the whole time period? (Sum the quantity of pasta by household over time and indicate the maximum)
+
+```{r}
+library(dplyr)
+pasty_qty <- pasta %>% 
+  group_by(HHID) %>%
+  summarize(pastaqty = sum(PASTA))
+max(pasty_qty$pastaqty)
+```
+
+The maximum pasta quantity a household has bought over the whole time period is 55.36193
+
+## 4. What is the average income of households living in area 4?
+
+```{r}
+pasta %>% filter(AREA==4) %>% 
+  summarize(mean_income = mean(INCOME))
+```
+
+```{r}
+mean(pasta[pasta$AREA == 4,]$INCOME)
+```
+
+The average income of household living in area 4 is 29260.13.
+
+## 5. How many households live in area 2, earn more than 20k, and have purchased more than 30 units of pasta over the whole time period?
+
+```{r}
+household_area2 <- pasta %>% 
+  filter(AREA == 2) %>% 
+  filter(INCOME > 20000) %>%
+  group_by(HHID) %>% 
+  summarize( total_qty = sum(PASTA)) %>% 
+  filter(total_qty > 30)
+nrow(household_area2)
+```
+
+218 households live in area 2, earn more than 20k, and have purchased more than 30 units of pasta over the whole time period.
+
+
+## 6.What is the correlation between the purchases of pasta and the exposures?
+
+```{r}
+cor.test(pasta$PASTA, pasta$EXPOS)
+```
+
+The correlation between the purchases of pasta and the exposures is 0.3266174.
+
+## 7. Which of the following graphs reports the correct histogram by household of the total purchase of pasta made by the household over the whole period? (Sum the purchases by household and make a histogram.)
+
+```{r}
+by_household <- pasta %>%
+  group_by(HHID) %>% 
+  summarise(total_pur = sum(PASTA))
+library(ggplot2)
+ggplot(aes(x=total_pur), data=by_household) + geom_histogram()
+```
+
+## 8. Which of the following graphs reports the correct time series of the overall total purchase of pasta? (Sum the purchases by time units and plot the quantity by time unit.)
+
+```{r}
+by_time <- pasta %>%
+  group_by(TIME) %>%
+  summarize(total_pur = sum(PASTA))
+ggplot(aes(x=TIME,y=total_pur), data = by_time) + geom_point()
+```
