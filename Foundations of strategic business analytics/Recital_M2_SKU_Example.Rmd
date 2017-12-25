@@ -1,0 +1,51 @@
+---
+title: "Recital M2 - SKU Example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data <- read.table('DATA_2.01_SKU.csv', header = T, sep = ',')
+```
+
+```{r}
+str(data)
+summary(data)
+```
+
+```{r}
+plot(data$CV, data$ADS, main = 'SKU Example', ylab = 'Average Daily Sales', xlab = 'Coefficient of variation')
+abline(v=0.2, col='red')
+abline(h=4, col='red')
+text(0.15, 9.7, 'horses', col='red')
+text(0.65, 9, 'Wild Bulls', col = 'red')
+text(0.8, 2, 'Crickets', col='red')
+```
+
+```{r}
+testdata <- data
+```
+
+```{r}
+testdata <- scale(testdata)
+```
+
+```{r}
+d <- dist(testdata, method = 'euclidean')
+hcward <- hclust(d, method='ward.D')
+```
+
+```{r}
+data$groups <- cutree(hcward, k=3)
+```
+
+```{r}
+library(lattice)
+xyplot(ADS~ CV,main = "After Clustering", type="p",group=groups,data=data,
+       auto.key=list(title="Group", space = "left", cex=1.0, just = 0.95), 
+       par.settings = list(superpose.line=list(pch = 0:18, cex=1)),
+       col=c('blue','green','red'))
+```
