@@ -1,0 +1,48 @@
+---
+title: "Recital M2 Telecom Example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data <- read.table('DATA_2.03_Telco.csv', header=T, sep = ',')
+```
+
+```{r}
+str(data)
+summary(data)
+```
+
+```{r}
+testdata <- data
+testdata <- scale(testdata)
+d = dist(testdata, method = 'euclidean')
+hcward <- hclust(d, method = 'ward.D')
+```
+
+```{r}
+# Let's try with 8 segments
+data$groups <- cutree(hcward, k=8)
+aggdata = aggregate(.~ groups, data=data, FUN=mean)
+proptemp=aggregate(Calls~ groups, data=data, FUN=length)
+aggdata$proportion=(proptemp$Calls)/sum(proptemp$Calls)
+aggdata=aggdata[order(aggdata$proportion,decreasing=T),]
+```
+
+```{r}
+# Let's try again with 5 segments
+data$groups <- cutree(hcward, k=5)
+aggdata = aggregate(.~ groups, data=data, FUN=mean)
+proptemp=aggregate(Calls~ groups, data=data, FUN=length)
+aggdata$proportion=(proptemp$Calls)/sum(proptemp$Calls)
+aggdata=aggdata[order(aggdata$proportion,decreasing=T),]
+```
+
+```{r}
+# Let's draw the radar chart with the function stars()
+palette(rainbow(12, s = 0.6, v = 0.75)) # Select the colors to use
+stars(aggdata[,2:(ncol(data))], len = 0.6, key.loc = c(11, 6),xlim=c(2,12),main = "Segments", draw.segments = TRUE,nrow = 2, cex = .75,labels=aggdata$groups)
+```
