@@ -1,0 +1,167 @@
+---
+title: "Recital M3-HR example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+datatot=read.table('DATA_3.02_HR2.csv', header = T,sep=',')
+```
+
+```{r}
+str(datatot)
+summary(datatot)
+```
+
+```{r}
+# look at the frequencies for the left variable
+table(datatot$left)
+```
+
+```{r}
+# look at percentages for the left variable
+table(datatot$left)/nrow(datatot)
+```
+
+```{r}
+# alternatively, plot a histogram
+hist(datatot$left)
+```
+
+```{r}
+# Check out the correlations
+cor(datatot)
+```
+
+```{r}
+# Estimate the drivers of attrition
+logreg = glm(left ~ ., family=binomial(logit), data=datatot)
+```
+
+```{r}
+# See the proportion of employee attrition according to the model
+hist(logreg$fitted.values)
+```
+
+```{r}
+# Assess the correlation between estimated attrition and actual
+cor(logreg$fitted.values, datatot$left)
+```
+
+```{r}
+# Cutoff to determine when P[leaving] should be considered as a leaver or not
+cutoff=0.3
+```
+
+```{r}
+table(logreg$fitted.values>=cutoff, datatot$left)
+```
+
+
+```{r}
+# Compute the percentage of correctly classified employees who stayed
+sum((logreg$fitted.values<=cutoff)&(datatot$left==0))/sum(datatot$left==0)
+# Compute the percentage of correctly classified employees who left
+sum((logreg$fitted.values > cutoff)&(datatot$left==1))/sum(datatot$left==1)
+# Compute the overall percentage of correctly classified employees
+mean((logreg$fitted.values>cutoff)==(datatot$left==1))
+```
+
+```{r}
+# Report the results of the logistic regression
+summary(logreg)
+```
+
+```{r}
+# Let's use a more visual way to see the effect of one of the most important driver: TIC
+plot(datatot$TIC, datatot$left, main= "Time and Employee Attrition", ylab="Attrition", xlab= "Time spent")
+```
+
+```{r}
+# An aggregated plot
+tempdata <- datatot
+# We compute the average attrition rate for each value of TIC
+aggbTimeRank <- aggregate(left~ TIC, data = tempdata, FUN = mean)
+plot(aggbTimeRank$TIC, aggbTimeRank$left, main= "Time and Employee Attrition", ylab="Average Attrition Rate", xlab= "Time spent")
+```
+
+An even better one!
+
+```{r}
+# We compute the number of employees for each value of TIC
+cntbTimeRank=aggregate(left~ TIC, data=tempdata, FUN=length)
+symbols(aggbTimeRank$TIC,aggbTimeRank$left,circles=cntbTimeRank$left, inches=.75, fg="white", bg="red",main= "Time and Employee Attrition", ylab="Average Attrition Rate", xlab= "Time spent")
+```
+
+Human perceive area of shapes like circles. So if some value is twice as large, we want the area of the circle to be twice as large, not the radius. The symbols() function takes the radius of the circles by default, so we need to compute the radius in order to end up with the desired size of circles.
+
+```{r}
+size = cntbTimeRank$left
+
+radius = sqrt(size / pi)
+
+symbols(x = aggbTimeRank$TIC, y = aggbTimeRank$left,
+
+        circles = radius, inches = .75, fg = "white", bg = "red",
+
+        main =  "Time and Employee Attrition",
+
+        ylab = "Average Attrition Rate", xlab =  "Time spent")
+```
+
+Let's use a visual way to see the effect of the most important driver: Satisfaction
+
+```{r}
+tempdata <- datatot
+# We create categories of employee satisfaction ranking. We create 20 groups (because it will work well later...)
+tempdata$rankSatis = round(rank(-tempdata$S)/600)
+# We compute the average attrition rate for each category
+aggbSatisRank = aggregate(left~ rankSatis, data=tempdata, FUN=mean)
+# We compute the number of employees for each value of TIC
+cntbSatisRank = aggregate(left~ rankSatis, data=tempdata, FUN=length)
+#Visualization
+symbols(aggbSatisRank$rankSatis,aggbSatisRank$left,circles=cntbSatisRank$left, inches=.2, fg="white", bg="red",main= "Satisfaction and Employee Attrition", ylab="Average Attrition Rate", xlab= "Rank of Satisfaction")
+```
+
+Instead of creating roughly equal size groups of 20 by rank, we create 20 bins of equal size between 0 and 1 and assign each employee to 1 bin based on Satisfaction.
+
+```{r}
+bins = 20
+
+breakPoints = seq(0, 1, length.out = (bins+1))
+
+tempdata$rankSatis = (bins+1) - as.numeric(cut(tempdata$S, breaks = breakPoints))
+```
+
+Visually, these are the bins we are choosing:
+
+```{r}
+hist(tempdata$S, breaks = breakPoints)
+
+abline(v = breakPoints, col = "red", lty = 2)
+```
+
+Note that the first bin 0-0.05 has no employees (so the circle should be size 0)
+
+```{r}
+# We compute the average attrition rate for each category
+aggbSatisRank <- aggregate(left~ rankSatis, data = tempdata, FUN = mean)
+# We compute the number of employees for each value of TIC
+cntbSatisRank <- aggregate(left~ rankSatis, data = tempdata, FUN = length)
+
+## Again here, we want to size the circles by their area, not radius
+size <- cntbSatisRank$left
+
+radius <- sqrt(size / pi)
+
+symbols(x = aggbSatisRank$rankSatis, y = aggbSatisRank$left,
+
+        circles = radius, inches = 0.2, fg = "white", bg = "red",
+
+        main =  "Satisfaction and Employee Attrition",
+
+        ylab = "Average Attrition Rate", xlab =  "Rank of Satisfaction")
+```
