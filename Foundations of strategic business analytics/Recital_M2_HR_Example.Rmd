@@ -1,0 +1,60 @@
+---
+title: "Recital M2-HR Example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data <- read.table('DATA_2.02_HR.csv', header=T, sep=',')
+```
+
+```{r}
+str(data)
+summary(data)
+```
+
+```{r}
+testdata <- data
+testdata <- scale(testdata)
+```
+
+```{r}
+d = dist(testdata, method = 'euclidean')
+hcward <- hclust(d, method = 'ward.D')
+```
+
+```{r}
+data$groups <- cutree(hcward, k=4)
+aggdata = aggregate(.~ groups, data=data, FUN=mean)
+```
+
+```{r}
+proptemp=aggregate(S~ groups, data=data, FUN=length)
+aggdata$proportion=(proptemp$S)/sum(proptemp$S)
+aggdata=aggdata[order(aggdata$proportion,decreasing=T),]
+```
+
+```{r}
+testdata <- data[, 1:5]
+testdata <- scale(testdata)
+d = dist(testdata, method = 'euclidean')
+hcward <- hclust(d, method = 'ward.D')
+```
+
+```{r}
+data$groups <- cutree(hcward, k=4)
+```
+
+```{r}
+aggdata = aggregate(.~ groups, data=data, FUN=mean)
+proptemp=aggregate(S~ groups, data=data, FUN=length)
+aggdata$proportion=(proptemp$S)/sum(proptemp$S)
+aggdata=aggdata[order(aggdata$proportion,decreasing=T),]
+```
+
+```{r}
+write.csv(aggdata, "HR_example_Numerical_Output.csv", row.names=FALSE)
+```
