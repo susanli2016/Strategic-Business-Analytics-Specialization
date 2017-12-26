@@ -1,0 +1,57 @@
+---
+title: "Recital M3-Credit score example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data <- read.table('DATA_3.01_CREDIT.csv', header = T, sep = ',')
+```
+
+```{r}
+str(data)
+summary(data)
+```
+
+```{r}
+# Produce a histogram of the credit scores
+hist(data$Rating)
+```
+
+```{r}
+# Compute the correlation between all the numerical variables of the sample
+cor(data[,c(1:5,10)])
+```
+
+```{r}
+# Estimate a linear regression model of Rating as a function of everything else.
+linreg=lm(Rating~.,data=data)
+```
+
+```{r}
+# Computes the correlation between the fitted values and the actual ones
+cor(linreg$fitted.values,data$Rating)
+```
+
+```{r}
+# Plot the fitted values vs. the actual ones
+plot(data$Rating,linreg$fitted.values)
+```
+
+```{r}
+# Reports the results of the regression
+summary(linreg)
+```
+
+```{r}
+# Visualize the relationship between Balance and Rating
+plot(data$Balance, data$Rating)
+```
+
+```{r}
+# Visualize the relationship between income and rating
+plot(data$Income, data$Rating)
+```
