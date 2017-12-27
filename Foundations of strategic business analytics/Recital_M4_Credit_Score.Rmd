@@ -1,0 +1,38 @@
+---
+title: "Recital M4-Credit Score"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+dataold <- read.table('DATA_3.01_CREDIT.csv', header = T, sep = ',')
+datanew <- read.table('DATA_4.01_CREDIT2.csv', header = T, sep = ',')
+```
+
+```{r}
+str(datanew)
+summary(datanew)
+```
+
+```{r}
+# Estimate a linear regression model of Rating as a function of everything else.
+linreg <- lm(Rating~., data = dataold)
+predcreditscore <- predict(linreg, newdata = datanew, type='response')
+```
+
+```{r}
+# Computes the correlation between the fitted values and the actual ones
+cor(linreg$fitted.values, dataold$Rating)
+# Plot the fitted values vs. the actual ones
+plot(dataold$Rating, linreg$fitted.values)
+```
+
+```{r}
+# Computes the correlation between the fitted values and the actual ones
+cor(predcreditscore, datanew$Rating)
+# Plot the fitted values vs. the actual ones
+plot(datanew$Rating, predcreditscore)
+```
