@@ -1,0 +1,52 @@
+---
+title: "Recital M4-HR example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+dataold <- read.table('DATA_3.02_HR2.csv', header = T, sep = ',')
+datanew <- read.table('DATA_4.02_HR3.csv', header = T, sep = ',')
+```
+
+```{r}
+str(datanew)
+summary(datanew)
+```
+
+```{r}
+# Estimate the drivers of attrition
+logreg <- glm(left~., family = binomial(logit), data = dataold)
+# Make predictions on the out-of-sample data
+probaToLeave <- predict(logreg, newdata = datanew, type='response')
+```
+
+```{r}
+# Structure the prediction output in a table
+predattrition = data.frame(probaToLeave)
+```
+
+```{r}
+# Add a column to the predattrition dataframe containing the performance
+predattrition$performance <- datanew$LPE
+```
+
+```{r}
+plot(predattrition$probaToLeave, predattrition$performance)
+abline(h=0.53, col='red')
+abline(v=0.39, col='red')
+text(0.27, 0.76, 'As usual', col='red')
+text(0.4, 0.47, 'Up or Out', col='red')
+text(0.7, 0.76, 'To be retained', col='red')
+```
+
+```{r}
+# Add a priority column that multiply the probaToLeave and performance
+predattrition$priority <- predattrition$probaToLeave*predattrition$performance
+# Order the priority from the highest
+orderpredattrition <- predattrition[order(predattrition$priority, decreasing = T), ]
+head(orderpredattrition)
+```
