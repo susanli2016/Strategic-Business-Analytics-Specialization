@@ -1,0 +1,57 @@
+---
+title: "Recital M4-Predictive maintenance example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data <- read.table('DATA_4.03_MNT.csv', header = T, sep = ',')
+str(data)
+summary(data)
+```
+
+```{r}
+# Build a linear regression model
+linregmodel <- lm(lifetime~. -broken, data = data)
+# The summary() function shows the output of your model
+summary(linregmodel)
+```
+
+```{r}
+library(survival)
+
+# choose the dependant variables to be used in the survival regression model with the Surv() function
+dependantvars <- Surv(data$lifetime, data$broken)
+# Create your survival regression model
+survreg <- survreg(dependantvars~pressureInd+moistureInd+temperatureInd+team+provider, dist='gaussian', data=data)
+# The summary() function shows the output of your model
+summary(survreg)
+```
+
+```{r}
+# Make predictions based on the model. Here we estimate the median lifetime as the expected moment of "death"
+Ebreak=predict(survreg, newdata=data, type="quantile", p=.5)
+# Create a dataframe to store the ouput of Ebreak
+Forecast <- data.frame(Ebreak)
+```
+
+```{r}
+# Add a column in the Forecast dataframe indicating the lifetime of the piece
+Forecast$lifetime <- data$lifetime
+# Add a column in the Forecast dataframe indicating whether or not the piece is broken
+Forecast$broken <- data$broken
+# Computed Expected Remaining Lifetime
+Forecast$remainingLT <- Forecast$Ebreak - data$lifetime
+```
+
+```{r}
+# Order the elements by Expected Remaining Lifetime
+Forecast <- Forecast[order(Forecast$remainingLT), ]
+# And keep only those who are not broken yet
+Actionspriority <- Forecast[Forecast$broken==0, ]
+
+head(Actionspriority)
+```
